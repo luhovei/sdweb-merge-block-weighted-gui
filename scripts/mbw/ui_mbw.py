@@ -32,7 +32,7 @@ def on_ui_tabs():
                 txt_block_weight = gr.Text(label="Weight values", placeholder="Put weight sets. float number x 25")
                 btn_apply_block_weithg_from_txt = gr.Button(value="Apply block weight from text", variant="primary")
                 with gr.Row():
-                    sl_base_alpha = gr.Slider(label="base_alpha", minimum=0, maximum=1, step=0.01, value=0)
+                    sl_base_alpha = gr.Slider(label="base_alpha", minimum=-1, maximum=1, step=0.01, value=0)
                     chk_verbose_mbw = gr.Checkbox(label="verbose console output", value=False)
                     chk_allow_overwrite = gr.Checkbox(label="Allow overwrite output-model", value=False)
                 with gr.Row():
@@ -40,26 +40,28 @@ def on_ui_tabs():
                         with gr.Row():
                             chk_save_as_half = gr.Checkbox(label="Save as half", value=False)
                             chk_save_as_safetensors = gr.Checkbox(label="Save as safetensors", value=False)
+                            chk_save_add_difference = gr.Checkbox(label="Use Add Difference (A + (alpha * (B - C)))", value=False)
                     with gr.Column(scale=4):
                         radio_position_ids = gr.Radio(label="Skip/Reset CLIP position_ids", choices=["None", "Skip", "Force Reset"], value="None", type="index")
         with gr.Row():
             model_A = gr.Dropdown(label="Model A", choices=sd_models.checkpoint_tiles())
             model_B = gr.Dropdown(label="Model B", choices=sd_models.checkpoint_tiles())
+            model_C = gr.Dropdown(label="Model C", choices=sd_models.checkpoint_tiles())
             txt_model_O = gr.Text(label="Output Model Name")
         with gr.Row():
             with gr.Column():
-                sl_IN_00 = gr.Slider(label="IN00", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_01 = gr.Slider(label="IN01", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_02 = gr.Slider(label="IN02", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_03 = gr.Slider(label="IN03", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_04 = gr.Slider(label="IN04", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_05 = gr.Slider(label="IN05", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_06 = gr.Slider(label="IN06", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_07 = gr.Slider(label="IN07", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_08 = gr.Slider(label="IN08", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_09 = gr.Slider(label="IN09", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_10 = gr.Slider(label="IN10", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_IN_11 = gr.Slider(label="IN11", minimum=0, maximum=1, step=0.01, value=0.5)
+                sl_IN_00 = gr.Slider(label="IN00", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_01 = gr.Slider(label="IN01", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_02 = gr.Slider(label="IN02", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_03 = gr.Slider(label="IN03", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_04 = gr.Slider(label="IN04", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_05 = gr.Slider(label="IN05", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_06 = gr.Slider(label="IN06", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_07 = gr.Slider(label="IN07", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_08 = gr.Slider(label="IN08", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_09 = gr.Slider(label="IN09", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_10 = gr.Slider(label="IN10", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_IN_11 = gr.Slider(label="IN11", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
             with gr.Column():
                 gr.Slider(visible=False)
                 gr.Slider(visible=False)
@@ -72,20 +74,20 @@ def on_ui_tabs():
                 gr.Slider(visible=False)
                 gr.Slider(visible=False)
                 gr.Slider(visible=False)
-                sl_M_00 = gr.Slider(label="M00", minimum=0, maximum=1, step=0.01, value=0.5, elem_id="mbw_sl_M00")
+                sl_M_00 = gr.Slider(label="M00", minimum=-0.5, maximum=1.5, step=0.01, value=0.5, elem_id="mbw_sl_M00")
             with gr.Column():
-                sl_OUT_11 = gr.Slider(label="OUT11", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_10 = gr.Slider(label="OUT10", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_09 = gr.Slider(label="OUT09", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_08 = gr.Slider(label="OUT08", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_07 = gr.Slider(label="OUT07", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_06 = gr.Slider(label="OUT06", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_05 = gr.Slider(label="OUT05", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_04 = gr.Slider(label="OUT04", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_03 = gr.Slider(label="OUT03", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_02 = gr.Slider(label="OUT02", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_01 = gr.Slider(label="OUT01", minimum=0, maximum=1, step=0.01, value=0.5)
-                sl_OUT_00 = gr.Slider(label="OUT00", minimum=0, maximum=1, step=0.01, value=0.5)
+                sl_OUT_11 = gr.Slider(label="OUT11", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_10 = gr.Slider(label="OUT10", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_09 = gr.Slider(label="OUT09", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_08 = gr.Slider(label="OUT08", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_07 = gr.Slider(label="OUT07", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_06 = gr.Slider(label="OUT06", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_05 = gr.Slider(label="OUT05", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_04 = gr.Slider(label="OUT04", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_03 = gr.Slider(label="OUT03", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_02 = gr.Slider(label="OUT02", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_01 = gr.Slider(label="OUT01", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
+                sl_OUT_00 = gr.Slider(label="OUT00", minimum=-0.5, maximum=1.5, step=0.01, value=0.5)
 
     sl_IN = [
         sl_IN_00, sl_IN_01, sl_IN_02, sl_IN_03, sl_IN_04, sl_IN_05,
@@ -97,14 +99,14 @@ def on_ui_tabs():
 
     # Events
     def onclick_btn_do_merge_block_weighted(
-        model_A, model_B,
+        model_A, model_B, model_C,
         sl_IN_00, sl_IN_01, sl_IN_02, sl_IN_03, sl_IN_04, sl_IN_05,
         sl_IN_06, sl_IN_07, sl_IN_08, sl_IN_09, sl_IN_10, sl_IN_11,
         sl_M_00,
         sl_OUT_00, sl_OUT_01, sl_OUT_02, sl_OUT_03, sl_OUT_04, sl_OUT_05,
         sl_OUT_06, sl_OUT_07, sl_OUT_08, sl_OUT_09, sl_OUT_10, sl_OUT_11,
         txt_model_O, sl_base_alpha, chk_verbose_mbw, chk_allow_overwrite,
-        chk_save_as_safetensors, chk_save_as_half,
+        chk_save_as_safetensors, chk_save_as_half, chk_save_add_difference,
         radio_position_ids
     ):
 
@@ -123,6 +125,9 @@ def on_ui_tabs():
         if not model_A or not model_B:
             return gr.update(value=f"ERROR: model not found. [{model_A}][{model_B}]")
 
+        if chk_save_add_difference and not model_C:
+            return gr.update(value=f"ERROR: model C not found for Add Difference. [{model_A}][{model_B}]")
+        
         #
         # Prepare params before run merge
         #
@@ -138,6 +143,12 @@ def on_ui_tabs():
             _model_B_info = model_B_info.model_name
         else:
             _model_B_info = ""
+        if chk_save_add_difference:
+            model_C_info = sd_models.get_closet_checkpoint_match(model_C)
+            if model_C_info:
+                _model_C_info = model_C_info.model_name
+            else:
+                _model_C_info = ""
 
         def validate_output_filename(output_filename, save_as_safetensors=False, save_as_half=False):
             output_filename = re.sub(r'[\\|:|?|"|<|>|\|\*]', '-', output_filename)
@@ -152,7 +163,7 @@ def on_ui_tabs():
                 _ret = f"{output_filename}{_footer}.ckpt"
             return _ret
 
-        model_O = f"bw-merge-{_model_A_name}-{_model_B_info}-{sl_base_alpha}.ckpt" if txt_model_O == "" else txt_model_O
+        model_O = f"bw-merge-{_model_A_name}-{_model_B_info}-{_model_C_info}-{sl_base_alpha}.ckpt" if txt_model_O == "" else txt_model_O
         model_O = validate_output_filename(model_O, save_as_safetensors=chk_save_as_safetensors, save_as_half=chk_save_as_half)
 
         _output = os.path.join(shared.cmd_opts.ckpt_dir or sd_models.model_path, model_O)
@@ -173,7 +184,9 @@ def on_ui_tabs():
             base_alpha=sl_base_alpha, output_file=_output, verbose=chk_verbose_mbw,
             save_as_safetensors=chk_save_as_safetensors,
             save_as_half=chk_save_as_half,
-            skip_position_ids=radio_position_ids
+            skip_position_ids=radio_position_ids,
+            model_2=model_C,
+            add_difference=chk_save_add_difference
             )
 
         if result:
@@ -219,16 +232,19 @@ def on_ui_tabs():
                 sl_base_alpha,
                 _weights,
                 "",
-                weight_name
+                weight_name,
+                model_C=model_name(model_C_info) if chk_save_add_difference else "",
+                model_C_hash=model_C_info.hash  if chk_save_add_difference else "",
+                model_C_sha256=model_sha256(model_C_info)  if chk_save_add_difference else ""
                 )
 
         return gr.update(value=f"{ret_html}")
     btn_do_merge_block_weighted.click(
         fn=onclick_btn_do_merge_block_weighted,
-        inputs=[model_A, model_B]
+        inputs=[model_A, model_B, model_C]
             + sl_IN + sl_MID + sl_OUT
             + [txt_model_O, sl_base_alpha, chk_verbose_mbw, chk_allow_overwrite]
-            + [chk_save_as_safetensors, chk_save_as_half, radio_position_ids],
+            + [chk_save_as_safetensors, chk_save_as_half, chk_save_add_difference, radio_position_ids],
         outputs=[html_output_block_weight_info]
     )
 
@@ -262,11 +278,11 @@ def on_ui_tabs():
 
     def on_btn_reload_checkpoint_mbw():
         sd_models.list_models()
-        return [gr.update(choices=sd_models.checkpoint_tiles()), gr.update(choices=sd_models.checkpoint_tiles())]
+        return [gr.update(choices=sd_models.checkpoint_tiles()), gr.update(choices=sd_models.checkpoint_tiles()), gr.update(choices=sd_models.checkpoint_tiles())]
     btn_reload_checkpoint_mbw.click(
         fn=on_btn_reload_checkpoint_mbw,
         inputs=[],
-        outputs=[model_A, model_B]
+        outputs=[model_A, model_B, model_C]
     )
 
     def on_btn_apply_block_weight_from_txt(txt_block_weight):

@@ -15,7 +15,9 @@ HEADERS = [
         "model_A", "model_A_hash", "model_A_sha256",
         "model_B", "model_B_hash", "model_B_sha256",
         "model_O", "model_O_hash", "model_O_sha256",
-        "base_alpha", "weight_name", "weight_values", "weight_values2", "datetime"]
+        "base_alpha", "weight_name", "weight_values", "weight_values2", "datetime",
+        "model_C", "model_C_hash", "model_C_sha256"
+        ]
 path_root = scripts.basedir()
 
 
@@ -35,7 +37,8 @@ class MergeHistory():
                 sl_base_alpha,
                 weight_value_A,
                 weight_value_B,
-                weight_name=""):
+                weight_name="", 
+                model_C="", model_C_hash="", model_C_sha256=""):
         _history_dict = {}
         _history_dict.update({
             "model_A": model_A_name,
@@ -51,7 +54,10 @@ class MergeHistory():
             "weight_name": weight_name,
             "weight_values": weight_value_A,
             "weight_values2": weight_value_B,
-            "datetime": f"{datetime.datetime.now()}"
+            "datetime": f"{datetime.datetime.now()}",
+            "model_C": model_C,
+            "model_C_hash": model_C_hash,
+            "model_C_sha256": model_C_sha256
             })
 
         if not os.path.exists(self.filepath):

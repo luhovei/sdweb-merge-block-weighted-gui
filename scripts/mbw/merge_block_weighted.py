@@ -11,6 +11,7 @@ import argparse
 import re
 import torch
 from tqdm import tqdm
+import gc
 
 from modules import sd_models
 
@@ -31,7 +32,9 @@ def merge(weights:list, model_0, model_1, device="cpu", base_alpha=0.5,
         output_file="", allow_overwrite=False, verbose=False,
         save_as_safetensors=False,
         save_as_half=False,
-        skip_position_ids=0
+        skip_position_ids=0,
+        add_difference=False,
+        model_2=None
         ):
     if weights is None:
         weights = None
@@ -56,6 +59,10 @@ def merge(weights:list, model_0, model_1, device="cpu", base_alpha=0.5,
     print("loading", model_1)
     theta_1 = load_model(model_1, device)
 
+    if add_difference:
+        print("loading", model_2)
+        theta_2 = load_model(model_2, device)
+
     alpha = base_alpha
 
     _footer = "-half" if save_as_half else ""
@@ -72,6 +79,74 @@ def merge(weights:list, model_0, model_1, device="cpu", base_alpha=0.5,
     re_inp = re.compile(r'\.input_blocks\.(\d+)\.')  # 12
     re_mid = re.compile(r'\.middle_block\.(\d+)\.')  # 1
     re_out = re.compile(r'\.output_blocks\.(\d+)\.') # 12
+
+    
+    if add_difference and model_2 is not None:
+        print(f"Removing {model_2} from {model_1} ....")
+        dprint(f"-- start Stage 0/2 --", verbose)
+        count_target_of_basealpha = 0
+        for key in (tqdm(theta_1.keys(), desc="Stage 0/2")):
+            if "model" in key and key in theta_2:
+                if KEY_POSITION_IDS in key:
+                    print(key)
+                    if skip_position_ids == 1:
+                        print(f"  modelC: skip 'position_ids' : dtype:{theta_2[KEY_POSITION_IDS].dtype}")
+                        dprint(f"{theta_0[KEY_POSITION_IDS]}", verbose)
+                        continue
+                    elif skip_position_ids == 2:
+                        theta_2[key] = torch.tensor([list(range(77))], dtype=torch.int64)
+                        print(f"  modelC: reset 'position_ids': dtype:{theta_2[KEY_POSITION_IDS].dtype}")
+                        dprint(f"{theta_2[KEY_POSITION_IDS]}", verbose)
+                        continue
+                    else:
+                        print(f"  modelC: 'position_ids' key found. do nothing : {skip_position_ids}: dtype:{theta_2[KEY_POSITION_IDS].dtype}")
+
+                dprint(f"  key : {key}", verbose)
+                current_alpha = alpha
+
+                # check weighted and U-Net or not
+                if weights is not None and 'model.diffusion_model.' in key:
+                    # check block index
+                    weight_index = -1
+
+                    if 'time_embed' in key:
+                        weight_index = 0                # before input blocks
+                    elif '.out.' in key:
+                        weight_index = NUM_TOTAL_BLOCKS - 1     # after output blocks
+                    else:
+                        m = re_inp.search(key)
+                        if m:
+                            inp_idx = int(m.groups()[0])
+                            weight_index = inp_idx
+                        else:
+                            m = re_mid.search(key)
+                            if m:
+                                weight_index = NUM_INPUT_BLOCKS
+                            else:
+                                m = re_out.search(key)
+                                if m:
+                                    out_idx = int(m.groups()[0])
+                                    weight_index = NUM_INPUT_BLOCKS + NUM_MID_BLOCK + out_idx
+
+                    if weight_index >= NUM_TOTAL_BLOCKS:
+                        print(f"error. illegal block index: {key}")
+                        return False, ""
+                    if weight_index >= 0:
+                        current_alpha = weights[weight_index]
+                        dprint(f"weighted '{key}': {current_alpha}", verbose)
+                else:
+                    count_target_of_basealpha = count_target_of_basealpha + 1
+                    dprint(f"base_alpha applied: [{key}]", verbose)
+
+
+                theta_1[key] = current_alpha * (theta_1[key] - theta_2[key])
+
+                if save_as_half:
+                    theta_1[key] = theta_1[key].half()
+                
+            else:
+                dprint(f"  key - {key}", verbose)
+            
 
     print("  merging ...")
     dprint(f"-- start Stage 1/2 --", verbose)
@@ -130,7 +205,10 @@ def merge(weights:list, model_0, model_1, device="cpu", base_alpha=0.5,
                 count_target_of_basealpha = count_target_of_basealpha + 1
                 dprint(f"base_alpha applied: [{key}]", verbose)
 
-            theta_0[key] = (1 - current_alpha) * theta_0[key] + current_alpha * theta_1[key]
+            if add_difference:
+                theta_0[key] = theta_0[key] + theta_1[key]
+            else:
+                theta_0[key] = (1 - current_alpha) * theta_0[key] + current_alpha * theta_1[key]
 
             if save_as_half:
                 theta_0[key] = theta_0[key].half()
@@ -166,6 +244,10 @@ def merge(weights:list, model_0, model_1, device="cpu", base_alpha=0.5,
 
     print("Saving...")
 
+    del theta_1
+    if add_difference:
+        del theta_2
+    
     _, extension = os.path.splitext(output_file)
     if extension.lower() == ".safetensors" or save_as_safetensors:
         if save_as_safetensors and extension.lower() != ".safetensors":
@@ -174,6 +256,9 @@ def merge(weights:list, model_0, model_1, device="cpu", base_alpha=0.5,
         safetensors.torch.save_file(theta_0, output_file, metadata={"format": "pt"})
     else:
         torch.save({"state_dict": theta_0}, output_file)
+
+    del theta_0
+    gc.collect()
 
     print("Done!")
 
