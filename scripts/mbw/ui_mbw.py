@@ -147,8 +147,8 @@ def on_ui_tabs():
             model_C_info = sd_models.get_closet_checkpoint_match(model_C)
             if model_C_info:
                 _model_C_info = model_C_info.model_name
-            else:
-                _model_C_info = ""
+        else:
+            _model_C_info = ""
 
         def validate_output_filename(output_filename, save_as_safetensors=False, save_as_half=False):
             output_filename = re.sub(r'[\\|:|?|"|<|>|\|\*]', '-', output_filename)
